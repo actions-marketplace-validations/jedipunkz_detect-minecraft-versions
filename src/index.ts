@@ -17,19 +17,27 @@ interface APIResponse {
   };
 }
 
+interface VersionInfo {
+  version: string;
+  windows: string;
+  linux: string;
+  releasedAt: string;
+}
+
+interface HistoryEntry {
+  type: 'stable' | 'preview';
+  version: string;
+  windows: string;
+  linux: string;
+  releasedAt: string;
+}
+
 interface VersionData {
-  stable: {
-    version: string;
-    windows: string;
-    linux: string;
-    updatedAt: string;
+  latest: {
+    stable: VersionInfo;
+    preview: VersionInfo;
   };
-  preview: {
-    version: string;
-    windows: string;
-    linux: string;
-    updatedAt: string;
-  };
+  history: HistoryEntry[];
 }
 
 function extractVersion(url: string): string | null {
@@ -37,7 +45,7 @@ function extractVersion(url: string): string | null {
   return match ? match[1] : null;
 }
 
-async function fetchVersions(): Promise<VersionData> {
+async function fetchLatestVersions(): Promise<{ stable: VersionInfo; preview: VersionInfo }> {
   const response = await fetch(API_URL);
   if (!response.ok) {
     throw new Error(`Failed to fetch versions: ${response.statusText}`);
@@ -61,18 +69,18 @@ async function fetchVersions(): Promise<VersionData> {
       version: stableVersion,
       windows: stableWindows,
       linux: stableLinux,
-      updatedAt: now,
+      releasedAt: now,
     },
     preview: {
       version: previewVersion,
       windows: previewWindows,
       linux: previewLinux,
-      updatedAt: now,
+      releasedAt: now,
     },
   };
 }
 
-async function loadExistingVersions(filePath: string): Promise<VersionData | null> {
+async function loadExistingData(filePath: string): Promise<VersionData | null> {
   if (!existsSync(filePath)) {
     return null;
   }
@@ -100,53 +108,84 @@ async function main() {
   const outputPath = join(process.cwd(), outputFile);
 
   console.log('Fetching Minecraft Bedrock versions from official API...');
-  const newVersions = await fetchVersions();
+  const latestVersions = await fetchLatestVersions();
 
-  console.log(`Stable version: ${newVersions.stable.version}`);
-  console.log(`Preview version: ${newVersions.preview.version}`);
+  console.log(`Stable version: ${latestVersions.stable.version}`);
+  console.log(`Preview version: ${latestVersions.preview.version}`);
 
-  const existingVersions = await loadExistingVersions(outputPath);
+  const existingData = await loadExistingData(outputPath);
 
   let hasChanges = false;
-  if (!existingVersions) {
+  let newHistory: HistoryEntry[] = existingData?.history || [];
+
+  if (!existingData) {
     console.log('No existing versions file found. Creating new one...');
     hasChanges = true;
   } else {
-    const stableChanged = existingVersions.stable.version !== newVersions.stable.version;
-    const previewChanged = existingVersions.preview.version !== newVersions.preview.version;
+    const stableChanged = existingData.latest.stable.version !== latestVersions.stable.version;
+    const previewChanged = existingData.latest.preview.version !== latestVersions.preview.version;
 
     if (stableChanged) {
-      console.log(`Stable version changed: ${existingVersions.stable.version} -> ${newVersions.stable.version}`);
+      console.log(`Stable version changed: ${existingData.latest.stable.version} -> ${latestVersions.stable.version}`);
+      // Add old stable version to history
+      newHistory.push({
+        type: 'stable',
+        version: existingData.latest.stable.version,
+        windows: existingData.latest.stable.windows,
+        linux: existingData.latest.stable.linux,
+        releasedAt: existingData.latest.stable.releasedAt,
+      });
       hasChanges = true;
+    } else {
+      // Preserve existing releasedAt timestamp if no change
+      latestVersions.stable.releasedAt = existingData.latest.stable.releasedAt;
     }
+
     if (previewChanged) {
-      console.log(`Preview version changed: ${existingVersions.preview.version} -> ${newVersions.preview.version}`);
+      console.log(`Preview version changed: ${existingData.latest.preview.version} -> ${latestVersions.preview.version}`);
+      // Add old preview version to history
+      newHistory.push({
+        type: 'preview',
+        version: existingData.latest.preview.version,
+        windows: existingData.latest.preview.windows,
+        linux: existingData.latest.preview.linux,
+        releasedAt: existingData.latest.preview.releasedAt,
+      });
       hasChanges = true;
+    } else {
+      // Preserve existing releasedAt timestamp if no change
+      latestVersions.preview.releasedAt = existingData.latest.preview.releasedAt;
     }
 
     if (!hasChanges) {
       console.log('No version changes detected.');
-      // Preserve existing updatedAt timestamps if no changes
-      newVersions.stable.updatedAt = existingVersions.stable.updatedAt;
-      newVersions.preview.updatedAt = existingVersions.preview.updatedAt;
     }
   }
 
+  // Remove duplicates from history (by type + version)
+  const uniqueHistory = newHistory.filter((entry, index, self) =>
+    index === self.findIndex((e) => e.type === entry.type && e.version === entry.version)
+  );
+
+  // Sort history by releasedAt (newest first)
+  uniqueHistory.sort((a, b) => new Date(b.releasedAt).getTime() - new Date(a.releasedAt).getTime());
+
+  const versionData: VersionData = {
+    latest: latestVersions,
+    history: uniqueHistory,
+  };
+
   // Write versions file
-  await writeFile(outputPath, JSON.stringify(newVersions, null, 2) + '\n');
+  await writeFile(outputPath, JSON.stringify(versionData, null, 2) + '\n');
   console.log(`Versions written to ${outputPath}`);
 
   // Set GitHub Actions outputs
   setOutput('updated', hasChanges ? 'true' : 'false');
-  setOutput('stable-version', newVersions.stable.version);
-  setOutput('preview-version', newVersions.preview.version);
+  setOutput('stable-version', latestVersions.stable.version);
+  setOutput('preview-version', latestVersions.preview.version);
   setOutput('has-changes', hasChanges ? 'true' : 'false');
 
-  if (hasChanges) {
-    process.exit(0);
-  } else {
-    process.exit(0);
-  }
+  process.exit(0);
 }
 
 main().catch(error => {

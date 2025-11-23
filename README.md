@@ -72,20 +72,42 @@ The action generates a `versions.json` file with the following structure:
 
 ```json
 {
-  "stable": {
-    "version": "1.21.124.2",
-    "windows": "https://minecraft.azureedge.net/bin-win/bedrock-server-1.21.124.2.zip",
-    "linux": "https://minecraft.azureedge.net/bin-linux/bedrock-server-1.21.124.2.zip",
-    "updatedAt": "2025-01-23T12:00:00.000Z"
+  "latest": {
+    "stable": {
+      "version": "1.21.124.2",
+      "windows": "https://www.minecraft.net/bedrockdedicatedserver/bin-win/bedrock-server-1.21.124.2.zip",
+      "linux": "https://www.minecraft.net/bedrockdedicatedserver/bin-linux/bedrock-server-1.21.124.2.zip",
+      "releasedAt": "2025-11-21T00:00:00.000Z"
+    },
+    "preview": {
+      "version": "1.21.130.28",
+      "windows": "https://www.minecraft.net/bedrockdedicatedserver/bin-win-preview/bedrock-server-1.21.130.28.zip",
+      "linux": "https://www.minecraft.net/bedrockdedicatedserver/bin-linux-preview/bedrock-server-1.21.130.28.zip",
+      "releasedAt": "2025-11-20T00:00:00.000Z"
+    }
   },
-  "preview": {
-    "version": "1.21.130.28",
-    "windows": "https://minecraft.azureedge.net/bin-win-preview/bedrock-server-1.21.130.28.zip",
-    "linux": "https://minecraft.azureedge.net/bin-linux-preview/bedrock-server-1.21.130.28.zip",
-    "updatedAt": "2025-01-23T12:00:00.000Z"
-  }
+  "history": [
+    {
+      "type": "stable",
+      "version": "1.21.120.0",
+      "windows": "https://www.minecraft.net/bedrockdedicatedserver/bin-win/bedrock-server-1.21.120.0.zip",
+      "linux": "https://www.minecraft.net/bedrockdedicatedserver/bin-linux/bedrock-server-1.21.120.0.zip",
+      "releasedAt": "2025-11-15T00:00:00.000Z"
+    },
+    {
+      "type": "preview",
+      "version": "1.21.120.24",
+      "windows": "https://www.minecraft.net/bedrockdedicatedserver/bin-win-preview/bedrock-server-1.21.120.24.zip",
+      "linux": "https://www.minecraft.net/bedrockdedicatedserver/bin-linux-preview/bedrock-server-1.21.120.24.zip",
+      "releasedAt": "2025-11-10T00:00:00.000Z"
+    }
+  ]
 }
 ```
+
+- **`latest`**: Contains the current stable and preview versions
+- **`history`**: Array of all previous versions, sorted by release date (newest first)
+  - Each entry includes `type` (`stable` or `preview`), version info, download URLs, and release timestamp
 
 ## Local Development
 
