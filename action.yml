@@ -1,0 +1,54 @@
+name: 'Detect Minecraft Bedrock Versions'
+description: 'Detects and updates Minecraft Bedrock Edition versions (stable and preview) from official Microsoft API'
+author: 'Your Name'
+
+branding:
+  icon: 'package'
+  color: 'green'
+
+inputs:
+  output-file:
+    description: 'Path to the output JSON file'
+    required: false
+    default: 'versions.json'
+  commit-changes:
+    description: 'Whether to commit changes if versions are updated'
+    required: false
+    default: 'false'
+
+outputs:
+  updated:
+    description: 'Whether versions were updated (true/false)'
+    value: ${{ steps.detect.outputs.updated }}
+  stable-version:
+    description: 'Latest stable version'
+    value: ${{ steps.detect.outputs.stable-version }}
+  preview-version:
+    description: 'Latest preview version'
+    value: ${{ steps.detect.outputs.preview-version }}
+  has-changes:
+    description: 'Whether there are changes to commit'
+    value: ${{ steps.detect.outputs.has-changes }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}
+        bun install
+
+    - name: Detect versions
+      id: detect
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}
+        bun run src/index.ts "${{ inputs.output-file }}"
+      env:
+        GITHUB_OUTPUT: ${{ github.output }}

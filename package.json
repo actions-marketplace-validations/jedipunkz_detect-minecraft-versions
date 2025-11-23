@@ -1,0 +1,24 @@
+{
+  "name": "detect-minecraft-versions",
+  "version": "1.0.0",
+  "description": "GitHub Action to detect and track Minecraft Bedrock Edition versions",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "test": "bun run src/index.ts versions.json"
+  },
+  "keywords": [
+    "minecraft",
+    "bedrock",
+    "version",
+    "github-actions"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
