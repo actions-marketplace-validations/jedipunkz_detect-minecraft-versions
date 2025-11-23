@@ -1,6 +1,6 @@
 name: 'Detect Minecraft Bedrock Versions'
 description: 'Detects and updates Minecraft Bedrock Edition versions (stable and preview) from official Microsoft API'
-author: 'Your Name'
+author: 'jedipunkz'
 
 branding:
   icon: 'package'

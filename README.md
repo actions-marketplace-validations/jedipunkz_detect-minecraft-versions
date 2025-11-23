@@ -37,7 +37,7 @@ jobs:
 
       - name: Detect Minecraft Bedrock versions
         id: detect
-        uses: your-username/detect-minecraft-versions@v1
+        uses: jedipunkz/detect-minecraft-versions@v1
         with:
           output-file: 'versions.json'
 
@@ -119,7 +119,7 @@ The action generates a `versions.json` file with the following structure:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/detect-minecraft-versions.git
+git clone https://github.com/jedipunkz/detect-minecraft-versions.git
 cd detect-minecraft-versions
 
 # Install dependencies
@@ -175,7 +175,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: your-username/detect-minecraft-versions@v1
+      - uses: jedipunkz/detect-minecraft-versions@v1
       - run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
